@@ -378,7 +378,23 @@ def pytest_make_collect_report(collector: Collector) -> CollectReport:
         if unittest is not None:
             # Type ignored because unittest is loaded dynamically.
             skip_exceptions.append(unittest.SkipTest)  # type: ignore
-        if isinstance(call.excinfo.value, tuple(skip_exceptions)):
+
+            # Check if the exception is an aliased unittest.skip and skip the test
+            if call.excinfo.value.__class__.__name__ == 'FunctionMaker':
+                outcome = "skipped"
+                r_ = collector._repr_failure_py(call.excinfo, "line")
+                assert isinstance(r_, ExceptionChainRepr), repr(r_)
+                r = r_.reprcrash
+                assert r
+                longrepr = (str(r.path), r.lineno, r.message)
+            else:
+                outcome = "failed"
+                errorinfo = collector.repr_failure(call.excinfo)
+                if not hasattr(errorinfo, "toterminal"):
+                    assert isinstance(errorinfo, str)
+                    errorinfo = CollectErrorRepr(errorinfo)
+                longrepr = errorinfo
+        elif isinstance(call.excinfo.value, tuple(skip_exceptions)):
             outcome = "skipped"
             r_ = collector._repr_failure_py(call.excinfo, "line")
             assert isinstance(r_, ExceptionChainRepr), repr(r_)

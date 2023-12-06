@@ -241,7 +241,7 @@ through ``add_color_level()``. Example:
 
 .. code-block:: python
 
-    @pytest.hookimpl(trylast=True)
+    @pytest.hookimpl
     def pytest_configure(config):
         logging_plugin = config.pluginmanager.get_plugin("logging-plugin")
 
